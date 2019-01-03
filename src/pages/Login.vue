@@ -25,6 +25,7 @@
 
 <script>
 import auth from "firebase/auth";
+import database from "firebase/database";
 import { mapActions } from "vuex";
 
 export default {
@@ -32,7 +33,8 @@ export default {
   data() {
     return {
       errors: [],
-      loading: false
+      loading: false,
+      usersRef: firebase.database().ref("users")
     };
   },
   computed: {
@@ -42,6 +44,7 @@ export default {
   },
   methods: {
     ...mapActions(["setUser"]),
+    // Аутентификация через Google
     async loginWithGoogle() {
       this.loading = true;
       this.errors = [];
@@ -50,12 +53,24 @@ export default {
         const response = await firebase
           .auth()
           .signInWithPopup(new firebase.auth.GoogleAuthProvider());
+
+        // добавить данные о пользователе в БД
+        await this.saveUserToUsersRef(response.user);
+
         await this.setUser(response.user);
+
         this.$router.push("/");
       } catch (err) {
         this.errors.push(err.message);
       }
       this.loading = false;
+    },
+    // Сохранение данных о пользователе в БД
+    async saveUserToUsersRef(user) {
+      return this.usersRef.child(user.uid).set({
+        name: user.displayName,
+        avatar: user.photoURL
+      });
     }
   }
 };
