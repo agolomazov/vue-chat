@@ -1,8 +1,8 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './pages/Home.vue'
-
+import Chat from './pages/Chat'
 Vue.use(Router)
+import auth from 'firebase/auth';
 
 export default new Router({
   mode: 'history',
@@ -10,26 +10,27 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: Home
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './pages/About.vue')
-    },
-    {
-      path: '/chat',
       name: 'chat',
-      component: () => import(/* webpackChunkName: "chat" */'./pages/Chat.vue')
+      component: Chat,
+      beforeEnter: (to, from, next) => {
+        if (!firebase.auth().currentUser) {
+          next('/login');
+        } else {
+          next();
+        }
+      } 
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import(/* webpackChunkName: "login" */'./pages/Login.vue')
+      component: () => import(/* webpackChunkName: "login" */'./pages/Login.vue'),
+      beforeEnter: (to, from, next) => {
+        if (firebase.auth().currentUser) {
+          next('/');
+        } else {
+          next();
+        }
+      } 
     }
   ]
 })
