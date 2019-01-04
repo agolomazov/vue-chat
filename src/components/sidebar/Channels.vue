@@ -9,6 +9,10 @@
         class="list-group-item list-group-item-action"
         :key="channel.id"
         type="button"
+        :class="{
+          'active': setActiveChannel(channel)
+        }"
+        @click="changeChannel(channel)"
       >{{ channel.name }}</button>
     </div>
 
@@ -56,6 +60,7 @@
 
 <script>
 import database from "firebase/database";
+import { mapActions, mapGetters } from "vuex";
 
 export default {
   name: "channels",
@@ -64,15 +69,18 @@ export default {
       newChannel: "",
       errors: [],
       channelsRef: firebase.database().ref("channels"),
-      channels: []
+      channels: [],
+      channel: null
     };
   },
   computed: {
+    ...mapGetters(["currentChannel"]),
     hasErrors() {
       return this.errors.length > 0;
     }
   },
   methods: {
+    ...mapActions(["setCurrentChannel"]),
     openModal() {
       $(this.$refs.channelModal)
         .appendTo("body")
@@ -98,10 +106,21 @@ export default {
       // Получаем список каналов и новые каналы при добавлении
       this.channelsRef.on("child_added", snapshot => {
         this.channels.push(snapshot.val());
+
+        if (this.channels.length > 0) {
+          this.channel = this.channels[0];
+          this.setCurrentChannel(this.channel);
+        }
       });
     },
     detachListeners() {
       this.channelsRef.off();
+    },
+    setActiveChannel(channel) {
+      return channel.id === this.currentChannel.id;
+    },
+    changeChannel(channel) {
+      this.setCurrentChannel(channel);
     }
   },
   mounted() {
