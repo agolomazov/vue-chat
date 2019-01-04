@@ -16,6 +16,13 @@
 import Sidebar from "@/components/sidebar/Sidebar";
 export default {
   name: "chat",
+  head: {
+    title: function() {
+      return {
+        inner: "#DEVCHAT APP#"
+      };
+    }
+  },
   components: {
     Sidebar
   }
@@ -31,7 +38,8 @@ export default {
   height: 100%;
   background-color: #000;
   padding-top: 2em;
-  overflow: scroll;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .content {

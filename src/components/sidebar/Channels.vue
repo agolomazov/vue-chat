@@ -2,7 +2,17 @@
   <div>
     <button class="btn btn-outline-primary" @click="openModal">Add Channel</button>
 
-    <!-- Modal -->
+    <!-- Список каналов  -->
+    <div class="mt-4">
+      <button
+        v-for="channel in channels"
+        class="list-group-item list-group-item-action"
+        :key="channel.id"
+        type="button"
+      >{{ channel.name }}</button>
+    </div>
+
+    <!-- Окно создания канала -->
     <div class="modal fade" ref="channelModal">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -20,14 +30,23 @@
                   name="new_channel"
                   class="form-control"
                   placeholder="Channel name"
+                  v-model="newChannel"
                 >
               </div>
+              <!-- errors -->
+              <ul class="list-group" v-if="hasErrors">
+                <li
+                  class="list-group-item text-danger"
+                  v-for="error in errors"
+                  :key="error"
+                >{{ error }}</li>
+              </ul>
             </form>
           </div>
 
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary">Add Channel</button>
+            <button type="button" class="btn btn-primary" @click="addChannel">Add Channel</button>
           </div>
         </div>
       </div>
@@ -36,14 +55,60 @@
 </template>
 
 <script>
+import database from "firebase/database";
+
 export default {
   name: "channels",
+  data() {
+    return {
+      newChannel: "",
+      errors: [],
+      channelsRef: firebase.database().ref("channels"),
+      channels: []
+    };
+  },
+  computed: {
+    hasErrors() {
+      return this.errors.length > 0;
+    }
+  },
   methods: {
     openModal() {
       $(this.$refs.channelModal)
         .appendTo("body")
         .modal("show");
+    },
+    async addChannel() {
+      this.errors = [];
+      const key = this.channelsRef.push().key;
+      const newChannel = {
+        id: key,
+        name: this.newChannel
+      };
+
+      try {
+        await this.channelsRef.child(key).update(newChannel);
+        $(this.$refs.channelModal).modal("hide");
+        this.newChannel = "";
+      } catch (err) {
+        this.errors = [err.message];
+      }
+    },
+    addListeners() {
+      // Получаем список каналов и новые каналы при добавлении
+      this.channelsRef.on("child_added", snapshot => {
+        this.channels.push(snapshot.val());
+      });
+    },
+    detachListeners() {
+      this.channelsRef.off();
     }
+  },
+  mounted() {
+    this.addListeners();
+  },
+  beforeDestroy() {
+    this.detachListeners();
   }
 };
 </script>

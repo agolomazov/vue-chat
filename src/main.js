@@ -1,4 +1,5 @@
 import Vue from 'vue'
+import VueHead from 'vue-head'
 import App from './App.vue'
 import router from './router'
 import store from './store'
@@ -16,6 +17,8 @@ const config = {
 
 firebase.initializeApp(config);
 window.firebase = firebase;
+
+Vue.use(VueHead);
 
 const unsubscribe = firebase.auth().onAuthStateChanged(user => {
   store.dispatch('setUser', user);
