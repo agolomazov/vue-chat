@@ -3,9 +3,7 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-4 sidebar">
-          <h2 class="text-light">#DEVCHAT#</h2>
-          <hr style="border: 1px solid #333;">
-          <button class="btn btn-outline-light" @click="logout">Logout</button>
+          <Sidebar/>
         </div>
 
         <div class="col-md-8 content">content</div>
@@ -15,18 +13,18 @@
 </template>
 
 <script>
-import auth from "firebase/auth";
-import { mapActions } from "vuex";
-
+import Sidebar from "@/components/sidebar/Sidebar";
 export default {
   name: "chat",
-  methods: {
-    ...mapActions(["setUser"]),
-    async logout() {
-      await firebase.auth().signOut();
-      await this.setUser(null);
-      this.$router.push("/login");
+  head: {
+    title: function() {
+      return {
+        inner: "#DEVCHAT APP#"
+      };
     }
+  },
+  components: {
+    Sidebar
   }
 };
 </script>
@@ -40,7 +38,8 @@ export default {
   height: 100%;
   background-color: #000;
   padding-top: 2em;
-  overflow: scroll;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .content {
