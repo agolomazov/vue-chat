@@ -6,7 +6,10 @@
           <Sidebar/>
         </div>
 
-        <div class="col-md-8 content">content</div>
+        <div class="col-md-8 content">
+          <Messages/>
+          <MessageForm/>
+        </div>
       </div>
     </div>
   </div>
@@ -14,17 +17,22 @@
 
 <script>
 import Sidebar from "@/components/sidebar/Sidebar";
+import Messages from "@/components/messages/Messages";
+import MessageForm from "@/components/messages/MessageForm";
+
 export default {
   name: "chat",
   head: {
-    title: function() {
-      return {
-        inner: "#DEVCHAT APP#"
-      };
+    title: {
+      inner: "Chat room",
+      separator: "-",
+      complement: "#DEVCHAT APP#"
     }
   },
   components: {
-    Sidebar
+    Sidebar,
+    Messages,
+    MessageForm
   }
 };
 </script>
