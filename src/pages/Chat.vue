@@ -8,7 +8,6 @@
 
         <div class="col-md-8 content">
           <Messages/>
-          <MessageForm/>
         </div>
       </div>
     </div>
@@ -18,8 +17,6 @@
 <script>
 import Sidebar from "@/components/sidebar/Sidebar";
 import Messages from "@/components/messages/Messages";
-import MessageForm from "@/components/messages/MessageForm";
-
 export default {
   name: "chat",
   head: {
@@ -31,8 +28,7 @@ export default {
   },
   components: {
     Sidebar,
-    Messages,
-    MessageForm
+    Messages
   }
 };
 </script>
