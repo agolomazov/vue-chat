@@ -30,6 +30,13 @@ import { mapActions } from "vuex";
 
 export default {
   name: "login",
+  head: {
+    title: {
+      inner: "Login page",
+      separator: "-",
+      complement: "#DEVCHAT APP#"
+    }
+  },
   data() {
     return {
       errors: [],
