@@ -2,26 +2,41 @@
   <div>
     <div class="text-light">
       <h4>Users</h4>
-      <ul class="nav flex-column">
-        <li v-for="user in users" :key="user.uid">
-          <span>
-            <img class="img rounded-circle mr-1" :src="user.avatar" :alt="user.name" height="20">
-            <span
-              :class="{
-              'text-primary': isOnline(user),
-              'text-danger': !isOnline(user)
+
+      <div class="mt-4">
+        <button
+          v-for="user in users"
+          class="list-group-item list-group-item-action pointer"
+          type="button"
+          :class="{
+            'active': isActive(user)
+          }"
+          @click.prevent="changeChannel(user)"
+          :key="user.uid"
+        >
+          <span
+            :class="{
+              'fa fa-circle online': isOnline(user),
+              'fa fa-circle offline': !isOnline(user)
             }"
-            >{{ user.name }}</span>
+          />&nbsp;&nbsp;&nbsp;
+          <span>
+            <img class="im rounded-circle" :src="user.avatar" height="20">
+            <span :class="{
+                'text-light': isActive(user)
+              }">
+              <a href="#">&nbsp;{{ user.name }}</a>
+            </span>
           </span>
-        </li>
-      </ul>
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import database from "firebase/database";
-import { mapGetters } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "users",
@@ -34,9 +49,10 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["currentUser"])
+    ...mapGetters(["currentUser", "currentChannel"])
   },
   methods: {
+    ...mapActions(["setCurrentChannel", "setPrivate"]),
     addListeners() {
       this.usersRef.on("child_added", snapshot => {
         if (this.currentUser.uid !== snapshot.key) {
@@ -82,6 +98,22 @@ export default {
     },
     isOnline(user) {
       return user.status === "online";
+    },
+    changeChannel(user) {
+      let channelId = this.getChannelId(user.uid);
+      let channel = { id: channelId, name: user.name };
+
+      this.setPrivate(true);
+      this.setCurrentChannel(channel);
+    },
+    getChannelId(userId) {
+      return userId < this.currentUser.uid
+        ? `${userId}/${this.currentUser.uid}`
+        : `${this.currentUser.uid}/${userId}`;
+    },
+    isActive(user) {
+      const channelId = this.getChannelId(user.uid);
+      return this.currentChannel.id === channelId;
     }
   },
   mounted() {
@@ -93,3 +125,18 @@ export default {
 };
 </script>
 
+<style scoped>
+.online {
+  color: green;
+}
+.offline {
+  color: red;
+}
+.pointer {
+  cursor: pointer;
+}
+
+.active a {
+  color: white !important;
+}
+</style>

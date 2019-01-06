@@ -1,17 +1,20 @@
 <template>
-  <div class="messages-list">
-    <message
-      :message="message"
-      v-for="message in messages"
-      :key="message.timeStamp"
-      :currentUser="currentUser"
-    />
-    <message-form
-      @sendMessage="sendMessage"
-      :currentChannel="currentChannel"
-      :currentUser="currentUser"
-      :errors="errors"
-    />
+  <div>
+    <h2>{{ channelName }}</h2>
+    <div class="messages-list">
+      <message
+        :message="message"
+        v-for="message in messages"
+        :key="message.timeStamp"
+        :currentUser="currentUser"
+      />
+      <message-form
+        @sendMessage="sendMessage"
+        :currentChannel="currentChannel"
+        :currentUser="currentUser"
+        :errors="errors"
+      />
+    </div>
   </div>
 </template>
 
@@ -26,17 +29,28 @@ export default {
   data() {
     return {
       messagesRef: firebase.database().ref("messages"),
+      privateMessagesRef: firebase.database().ref("privateMessages"),
       errors: [],
       messages: [],
-      channel: ""
+      channel: null,
+      listeners: []
     };
   },
   computed: {
-    ...mapGetters(["currentChannel", "currentUser"])
+    ...mapGetters(["currentChannel", "currentUser", "isPrivate"]),
+    channelName() {
+      if (this.channel !== null) {
+        return this.isPrivate
+          ? `@ ${this.channel.name}`
+          : `# ${this.channel.name}`;
+      }
+
+      return null;
+    }
   },
   watch: {
     currentChannel() {
-      this.messages = [];
+      this.detachListeners();
       this.addListeners();
       this.channel = this.currentChannel;
     }
@@ -44,7 +58,8 @@ export default {
   methods: {
     async sendMessage(message) {
       try {
-        await this.messagesRef
+        const ref = this.getMessagesRef();
+        await ref
           .child(this.currentChannel.id)
           .push()
           .set(message)
@@ -58,18 +73,44 @@ export default {
       }
     },
     async addListeners() {
-      this.messagesRef
-        .child(this.currentChannel.id)
-        .on("child_added", snapshot => {
-          this.messages = [...this.messages, snapshot.val()];
-          this.$nextTick(() => {
-            window.scrollTo(0, document.documentElement.scrollHeight);
-          });
+      const ref = this.getMessagesRef();
+      ref.child(this.currentChannel.id).on("child_added", snapshot => {
+        const message = snapshot.val();
+        message["id"] = snapshot.key;
+        this.messages = [...this.messages, message];
+        this.$nextTick(() => {
+          window.scrollTo(0, document.documentElement.scrollHeight);
         });
+      });
+
+      this.addToListeners(this.currentChannel.id, ref, "child_added");
+    },
+    addToListeners(id, ref, event) {
+      const index = this.listeners.findIndex(el => {
+        return el.id === id && el.ref === ref && el.event === event;
+      });
+
+      if (index === -1) {
+        this.listeners.push({
+          id,
+          ref,
+          event
+        });
+      }
     },
     detachListeners() {
-      if (this.channel !== null) {
-        this.messagesRef.child(this.channel.id).off();
+      this.listeners.forEach(listener => {
+        listener.ref.child(listener.id).off(listener.event);
+      });
+
+      this.listeners = [];
+      this.messages = [];
+    },
+    getMessagesRef() {
+      if (this.isPrivate) {
+        return this.privateMessagesRef;
+      } else {
+        return this.messagesRef;
       }
     }
   },

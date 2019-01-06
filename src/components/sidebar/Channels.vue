@@ -80,7 +80,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(["setCurrentChannel"]),
+    ...mapActions(["setCurrentChannel", "setPrivate"]),
     openModal() {
       $(this.$refs.channelModal)
         .appendTo("body")
@@ -120,6 +120,7 @@ export default {
       return channel.id === this.currentChannel.id;
     },
     changeChannel(channel) {
+      this.setPrivate();
       this.setCurrentChannel(channel);
     }
   },
