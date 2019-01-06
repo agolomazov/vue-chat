@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="messages-list">
     <message
       :message="message"
       v-for="message in messages"
@@ -47,7 +47,12 @@ export default {
         await this.messagesRef
           .child(this.currentChannel.id)
           .push()
-          .set(message);
+          .set(message)
+          .then(() => {
+            this.$nextTick(() => {
+              window.scrollTo(0, document.documentElement.scrollHeight);
+            });
+          });
       } catch (error) {
         this.errors = [error.message];
       }
@@ -57,6 +62,9 @@ export default {
         .child(this.currentChannel.id)
         .on("child_added", snapshot => {
           this.messages = [...this.messages, snapshot.val()];
+          this.$nextTick(() => {
+            window.scrollTo(0, document.documentElement.scrollHeight);
+          });
         });
     },
     detachListeners() {
@@ -74,3 +82,9 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.messages-list {
+  padding-bottom: 65px;
+}
+</style>

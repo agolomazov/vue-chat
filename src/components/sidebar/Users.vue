@@ -5,8 +5,13 @@
       <ul class="nav flex-column">
         <li v-for="user in users" :key="user.uid">
           <span>
-            <img class="img rounded-circle" :src="user.avatar" :alt="user.name" height="20">
-            <span class="text-primary">{{ user.name }}</span>
+            <img class="img rounded-circle mr-1" :src="user.avatar" :alt="user.name" height="20">
+            <span
+              :class="{
+              'text-primary': isOnline(user),
+              'text-danger': !isOnline(user)
+            }"
+            >{{ user.name }}</span>
           </span>
         </li>
       </ul>
@@ -42,6 +47,18 @@ export default {
         }
       });
 
+      this.presenceRef.on("child_added", snapshot => {
+        if (this.currentUser.uid !== snapshot.key) {
+          this.addStatusToUser(snapshot.key);
+        }
+      });
+
+      this.presenceRef.on("child_removed", snapshot => {
+        if (this.currentUser.uid !== snapshot.key) {
+          this.addStatusToUser(snapshot.key, false);
+        }
+      });
+
       this.connectedRef.on("value", snapshot => {
         if (snapshot.val() === true) {
           let ref = this.presenceRef.child(this.currentUser.uid);
@@ -52,6 +69,19 @@ export default {
     },
     detachListeners() {
       this.usersRef.off();
+      this.presenceRef.off();
+      this.connectedRef.off();
+    },
+    addStatusToUser(userId, connected = true) {
+      let index = this.users.findIndex(user => user.uid === userId);
+      if (index !== -1) {
+        connected
+          ? (this.users[index].status = "online")
+          : (this.users[index].status = "offline");
+      }
+    },
+    isOnline(user) {
+      return user.status === "online";
     }
   },
   mounted() {

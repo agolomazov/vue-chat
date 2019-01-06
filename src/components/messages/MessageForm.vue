@@ -9,6 +9,7 @@
             class="form-control mt-3"
             placeholder="Write something"
             autofocus
+            @keypress.enter="sendMessage"
             v-model.trim="message"
           >
 
