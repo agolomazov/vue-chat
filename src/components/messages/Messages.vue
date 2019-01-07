@@ -8,8 +8,18 @@
         :key="message.timeStamp"
         :currentUser="currentUser"
       />
+
+      <!-- File upload progress bar -->
+      <div class="progress">
+        <div
+          class="progress-bar progress-bar-striped progress-bar-animated"
+          role="progressbar"
+          ref="progressBar"
+        >upload</div>
+      </div>
       <message-form
         @sendMessage="sendMessage"
+        @uploadFile="uploadFile"
         :currentChannel="currentChannel"
         :currentUser="currentUser"
         :errors="errors"
@@ -22,7 +32,9 @@
 import Message from "./Message";
 import MessageForm from "./MessageForm";
 import database from "firebase/database";
+import storage from "firebase/storage";
 import { mapGetters } from "vuex";
+import uuidv4 from "uuid/v4";
 
 export default {
   name: "messages",
@@ -30,10 +42,13 @@ export default {
     return {
       messagesRef: firebase.database().ref("messages"),
       privateMessagesRef: firebase.database().ref("privateMessages"),
+      storageRef: firebase.storage().ref(),
       errors: [],
       messages: [],
       channel: null,
-      listeners: []
+      listeners: [],
+      uploadTask: null,
+      uploadState: null
     };
   },
   computed: {
@@ -112,6 +127,39 @@ export default {
       } else {
         return this.messagesRef;
       }
+    },
+    async uploadFile(payload) {
+      const { file, metadata } = payload;
+      if (file === null) return;
+
+      const pathToUpload = this.currentChannel.id;
+      const ref = this.getMessagesRef();
+      const filePath = `${this.getPath()}/${uuidv4()}.jpg`;
+
+      this.uploadTask = this.storageRef.child(filePath).put(file, metadata);
+      this.uploadState = "uploading";
+
+      // on upload state change
+      this.uploadTask.on(
+        "state_changed",
+        snapshot => {
+          // on change file upload
+          const percent =
+            (snapshot.bytesTransfered / snapshot.totalBytes) * 100;
+          this.$refs.progressBar.style.width = `${percent}%`;
+        },
+        error => {},
+        () => {
+          // upload finished
+        }
+      );
+    },
+    getPath() {
+      if (this.isPrivate) {
+        return `chat/private/${this.currentChannel.id}`;
+      } else {
+        return "chat/public";
+      }
     }
   },
   components: {
@@ -127,5 +175,9 @@ export default {
 <style scoped>
 .messages-list {
   padding-bottom: 65px;
+}
+
+.progress {
+  margin-bottom: -16px;
 }
 </style>

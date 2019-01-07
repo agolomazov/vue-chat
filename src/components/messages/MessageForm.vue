@@ -18,9 +18,9 @@
           </div>
 
           <div class="input-group-append">
-            <button type="button" @click="selectFile" class="btn btn-warning mt-3">Upload</button>
+            <button type="button" @click.prevent="openFileModal" class="btn btn-warning mt-3">Upload</button>
           </div>
-          <input type="file" name="file" ref="fileInput" class="hidden" @change="changeFile">
+          <file-modal ref="fileModal" id="fileModal"/>
         </div>
       </form>
     </div>
@@ -29,6 +29,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import FileModal from "./FileModal";
 
 export default {
   name: "MessageForm",
@@ -72,12 +73,17 @@ export default {
         this.message = "";
       }
     },
-    selectFile() {
-      this.$refs.fileInput.click();
+    openFileModal() {
+      $("#fileModal")
+        .appendTo("body")
+        .modal("show");
     },
-    changeFile(event) {
-      this.$refs.fileInput.value = "";
+    uploadFile(file, metadata) {
+      this.$emit("uploadFile", { file, metadata });
     }
+  },
+  components: {
+    "file-modal": FileModal
   }
 };
 </script>
@@ -91,7 +97,7 @@ export default {
   z-index: 100;
   color: #fff;
   text-align: center;
-  margin: -16px;
+  margin: -20px;
   margin-left: 33.3%;
 }
 
